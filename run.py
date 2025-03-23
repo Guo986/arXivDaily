@@ -6,6 +6,7 @@ import time
 import argparse
 import yaml
 import os
+from translate import translate
 
 def load_config(configFile):
     def getKeywords(config):
@@ -39,7 +40,9 @@ def get_content(url):
         thisPaper['id'] = i.id.text
         thisPaper['updated'] = i.updated.text
         thisPaper['title'] = i.title.text
-        thisPaper['abstract'] = i.summary.text
+        thisPaper['abstract'] = i.summary.text.replace('\n', ' ')
+        thisPaper['Chinese_abstract'] = translate(thisPaper['abstract'])
+        time.sleep(1)
         thisPaper['author'] = ', '.join([j.text for j in i.find_all('name')])
         thisPaper['pdfLink'] = [link.attrs['href'] for link in i.find_all('link') if link.attrs['rel']=='related' and link.attrs['title']=='pdf'][0]
         if len(i.find_all('arxiv:comment'))>0:
@@ -71,12 +74,12 @@ def main():
     return results
 
 def outResults(results):
-    print(json.dumps(results, indent=4))
+    # print(json.dumps(results, indent=4))
     for k,v in results.items():
         print('%s -- %d papers' % (k, len(v)))
     if not os.path.exists(config['saveBasePath']):
         os.makedirs(config['saveBasePath'])
-    with open(os.path.join(config['saveBasePath'], 'all.json'), 'a', encoding='utf-8') as f:
+    with open(os.path.join(config['saveBasePath'], get_past_time_gmt(config['pastDays'])+'.json'), 'a', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=4)
 
     

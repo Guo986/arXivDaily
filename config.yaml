@@ -1,0 +1,14 @@
+# 检索的关键词
+keywords:
+    "agent": ["agent", ]
+    "Time Series": ["Time Series", ]
+# 搜索的时间，从当天凌晨往回推  pastDays 天。使用 UTC 时间，北京时间为 UTC+8
+pastDays: 3
+
+base_url: 'https://export.arxiv.org/api/query?'
+start: 0
+total_results: 100              # want xxx total results
+results_per_iteration: 100      # xxx results at a time
+wait_time: 5                    # number of seconds to wait beetween calls
+
+saveBasePath: "resultPapers"

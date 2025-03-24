@@ -2,3 +2,5 @@ bs4
 lxml
 pyyaml
 requests
+tiktoken
+openai

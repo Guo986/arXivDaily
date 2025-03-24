@@ -9,7 +9,7 @@ import requests
 import random
 import json
 from hashlib import md5
-from myTranslateConfig import baidu_appid,baidu_appkey
+from myTranslateConfig import baidu_appid,baidu_appkey,deepseek_apikey
 
 def baiduTranslate(query):
     # Set your own appid/appkey.
@@ -46,8 +46,38 @@ def baiduTranslate(query):
         resultAll += item['dst']
     return resultAll
 
-def translate(query):
-    return baiduTranslate(query)
+'''
+https://api-docs.deepseek.com/zh-cn/
+https://platform.deepseek.com/usage
+
+words = 269
+openai_token = 378
+deepseek_token = 421
+CompletionUsage(completion_tokens=200, prompt_tokens=221, total_tokens=421, completion_tokens_details=None, prompt_tokens_details=PromptTokensDetails(audio_tokens=None, cached_tokens=0), prompt_cache_hit_tokens=0, prompt_cache_miss_tokens=221)
+'''
+def deepseekV3Translate(query, outputTokens=False):
+    # Please install OpenAI SDK first: `pip3 install openai`
+    from openai import OpenAI
+
+    client = OpenAI(api_key=deepseek_apikey, base_url="https://api.deepseek.com")
+
+    # 14.7s
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "Translate it from English to Chinese. Output the translation, only."},
+            {"role": "user", "content": query},
+        ],
+        stream=False
+    )
+    if outputTokens:
+        return response.choices[0].message.content, response.usage.total_tokens
+    else:
+        return response.choices[0].message.content
+    
+def translate(query, outputTokens=False):
+    return deepseekV3Translate(query, outputTokens)
 # q = "  The emergence of LLM-based agents represents a paradigm shift in AI, enabling\nautonomous systems to plan, reason, use tools, and maintain memory while\ninteracting with dynamic environments. This paper provides the first\ncomprehensive survey of evaluation methodologies for these increasingly capable\nagents. We systematically analyze evaluation benchmarks and frameworks across\nfour critical dimensions: (1) fundamental agent capabilities, including\nplanning, tool use, self-reflection, and memory; (2) application-specific\nbenchmarks for web, software engineering, scientific, and conversational\nagents; (3) benchmarks for generalist agents; and (4) frameworks for evaluating\nagents. Our analysis reveals emerging trends, including a shift toward more\nrealistic, challenging evaluations with continuously updated benchmarks. We\nalso identify critical gaps that future research must address-particularly in\nassessing cost-efficiency, safety, and robustness, and in developing\nfine-grained, and scalable evaluation methods. This survey maps the rapidly\nevolving landscape of agent evaluation, reveals the emerging trends in the\nfield, identifies current limitations, and proposes directions for future\nresearch.\n"
-# result = translate(q.replace('\n', ' '))
+# q = q.replace('\n', ' ').strip()
+# result = translate(q, outputTokens=True)
 # print(f"{result=}")

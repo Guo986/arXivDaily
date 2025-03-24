@@ -29,6 +29,7 @@ def get_past_time_gmt(pastDays: int):
         return '['+formatted_time+'+TO+'+current_time.replace(hour=0, minute=0, second=0, microsecond=0).strftime('%Y%m%d%H%M')+']'
 
 def get_content(url):
+    global allTokens
     data = urllib.request.urlopen(url)
     xml = data.read().decode('utf-8')
     soup = BeautifulSoup(xml, "xml")
@@ -41,8 +42,8 @@ def get_content(url):
         thisPaper['updated'] = i.updated.text
         thisPaper['title'] = i.title.text
         thisPaper['abstract'] = i.summary.text.replace('\n', ' ')
-        thisPaper['Chinese_abstract'] = translate(thisPaper['abstract'])
-        time.sleep(1)
+        thisPaper['Chinese_abstract'],token = translate(thisPaper['abstract'], True)
+        allTokens += token
         thisPaper['author'] = ', '.join([j.text for j in i.find_all('name')])
         thisPaper['pdfLink'] = [link.attrs['href'] for link in i.find_all('link') if link.attrs['rel']=='related' and link.attrs['title']=='pdf'][0]
         if len(i.find_all('arxiv:comment'))>0:
@@ -63,7 +64,7 @@ def main():
             search_query = '%s+AND+submittedDate:%s' % ('all:'+value, submittedDate)
             
             for i in range(config['start'], config['total_results'], config['results_per_iteration']):
-                print("Results %i - %i" % (i, i+config['results_per_iteration']))        
+                # print("Results %i - %i" % (i, i+config['results_per_iteration']))        
                 query = 'search_query=%s&start=%i&max_results=%i&sortBy=lastUpdatedDate&sortOrder=descending' % (search_query, i, config['results_per_iteration'])
                 print('Search arXiv:', config['base_url']+query)
                 papers = get_content(config['base_url']+query)
@@ -74,6 +75,8 @@ def main():
     return results
 
 def outResults(results):
+    global allTokens
+    print(f"{allTokens=}")
     # print(json.dumps(results, indent=4))
     for k,v in results.items():
         print('%s -- %d papers' % (k, len(v)))
@@ -89,5 +92,6 @@ if __name__== "__main__" :
                             help='configuration file path')
     args = parser.parse_args()
     config = load_config(args.config_path)
+    allTokens = 0
     results = main()
     outResults(results)

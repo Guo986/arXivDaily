@@ -7,6 +7,7 @@ import argparse
 import yaml
 import os
 from translate import translate
+from tqdm import tqdm
 
 def load_config(configFile):
     def getKeywords(config):
@@ -36,22 +37,25 @@ def get_content(url):
     # print(soup.prettify())
     allItems = soup.find_all('entry')
     papers = []
-    for i in allItems:
-        thisPaper = {}
-        thisPaper['id'] = i.id.text
-        thisPaper['updated'] = i.updated.text
-        thisPaper['title'] = i.title.text
-        thisPaper['abstract'] = i.summary.text.replace('\n', ' ')
-        thisPaper['Chinese_abstract'],token = translate(thisPaper['abstract'], True)
-        allTokens += token
-        thisPaper['author'] = ', '.join([j.text for j in i.find_all('name')])
-        thisPaper['pdfLink'] = [link.attrs['href'] for link in i.find_all('link') if link.attrs['rel']=='related' and link.attrs['title']=='pdf'][0]
-        if len(i.find_all('arxiv:comment'))>0:
-            thisPaper['comment'] = i.find_all('arxiv:comment')[0].text
-        else:
-            thisPaper['comment'] = ''
-        thisPaper['term'] = '; '.join([item.attrs['term'] for item in i.find_all('category')])
-        papers.append(thisPaper)
+    with tqdm(allItems) as pbar:
+        for idx,i in enumerate(pbar):
+            thisPaper = {}
+            thisPaper['id'] = i.id.text
+            thisPaper['updated'] = i.updated.text
+            thisPaper['title'] = i.title.text
+            thisPaper['abstract'] = i.summary.text.replace('\n', ' ')
+            thisPaper['Chinese_abstract'], token = translate(thisPaper['abstract'], True) if config.translate else ("", 0)
+            allTokens += token
+            thisPaper['author'] = ', '.join([j.text for j in i.find_all('name')])
+            thisPaper['pdfLink'] = [link.attrs['href'] for link in i.find_all('link') if link.attrs['rel']=='related' and link.attrs['title']=='pdf'][0]
+            if len(i.find_all('arxiv:comment'))>0:
+                thisPaper['comment'] = i.find_all('arxiv:comment')[0].text
+            else:
+                thisPaper['comment'] = ''
+            thisPaper['term'] = '; '.join([item.attrs['term'] for item in i.find_all('category')])
+            papers.append(thisPaper)
+            pbar.set_description("Analyse&Translate %04d / %04d | id=%s | tokens+=%d=%d" % (idx+1, len(allItems), thisPaper['id'].split('/')[-1], token, allTokens))
+            time.sleep(1)
     return papers
 
 def main():

@@ -74,8 +74,15 @@ def deepseekV3Translate(query, outputTokens=False):
         return response.choices[0].message.content, response.usage.total_tokens
     else:
         return response.choices[0].message.content
-    
+
+def test(query, outputTokens):
+    if outputTokens:
+        return "test", 0
+    else:
+        return "test"
+
 def translate(query, outputTokens=False):
+    # return test(query, outputTokens)
     return deepseekV3Translate(query, outputTokens)
 # q = "  The emergence of LLM-based agents represents a paradigm shift in AI, enabling\nautonomous systems to plan, reason, use tools, and maintain memory while\ninteracting with dynamic environments. This paper provides the first\ncomprehensive survey of evaluation methodologies for these increasingly capable\nagents. We systematically analyze evaluation benchmarks and frameworks across\nfour critical dimensions: (1) fundamental agent capabilities, including\nplanning, tool use, self-reflection, and memory; (2) application-specific\nbenchmarks for web, software engineering, scientific, and conversational\nagents; (3) benchmarks for generalist agents; and (4) frameworks for evaluating\nagents. Our analysis reveals emerging trends, including a shift toward more\nrealistic, challenging evaluations with continuously updated benchmarks. We\nalso identify critical gaps that future research must address-particularly in\nassessing cost-efficiency, safety, and robustness, and in developing\nfine-grained, and scalable evaluation methods. This survey maps the rapidly\nevolving landscape of agent evaluation, reveals the emerging trends in the\nfield, identifies current limitations, and proposes directions for future\nresearch.\n"
 # q = q.replace('\n', ' ').strip()
